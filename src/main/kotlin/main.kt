@@ -1,11 +1,8 @@
 
 
 import com.github.kittinunf.fuel.Fuel
+import org.jetbrains.exposed.sql.*
 import kotlin.concurrent.thread
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main(args: Array<String>) {
@@ -29,7 +26,7 @@ fun main(args: Array<String>) {
     transaction {
         SchemaUtils.create(TableSong)
 
-        if (songs != null){
+        if (songs != null) {
             for (song in songs) {
                 TableSong.insert {
                     it[songName] = song.song
@@ -62,14 +59,24 @@ fun main(args: Array<String>) {
                 }
             }
         }
-    }
 
-    println("""
+
+        println("""
         1. Buscar canciones por nombre
         2. Buscar canciones por artista
         3. Mostrar todas mis canciones favoritas
         4. Salir
     """.trimIndent())
+        val ingreso = readLine()!!
 
-
+        when (ingreso) {
+            "1" -> {
+                println("Ingrese su búsqueda")
+                val name = readLine()!!
+                for (song in TableSong.select { TableSong.songName.like("%${name}%") }) {
+                    println(song)
+                }
+            }
+        }
+    }
 }
