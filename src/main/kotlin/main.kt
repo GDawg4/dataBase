@@ -1,7 +1,7 @@
 
-
 import com.github.kittinunf.fuel.Fuel
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import kotlin.concurrent.thread
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -14,8 +14,6 @@ fun main(args: Array<String>) {
 
     val (request, response, result) = Fuel.get(url).responseObject(Song.SongArrayDeserializer())
     val (songs, err) = result
-
-    Thread.sleep(5000)
 
     Database.connect(
             "jdbc:postgresql:test",
@@ -59,27 +57,37 @@ fun main(args: Array<String>) {
                 }
             }
         }
+        val wantsToContinue = true
 
-
-        println("""
-        1. Buscar canciones por nombre
-        2. Buscar canciones por artista
-        3. Mostrar todas mis canciones favoritas
-        4. Salir
-    """.trimIndent())
-        val ingreso = readLine()!!
-
-        when (ingreso) {
-            "1" -> {
-                println("Ingrese su búsqueda")
-                val name = readLine()!!
-                /*
-                for (songN in TableSong.select { TableSong.songName.like("%${name}%") }) {
-                    println("$it[]")
+        while (wantsToContinue){
+            println("""
+                1. Buscar canciones por nombre
+                2. Buscar canciones por artista
+                3. Mostrar todas mis canciones favoritas
+                4. Salir
+            """.trimIndent())
+            val ingreso = readLine()!!
+            when (ingreso) {
+                "1" -> {
+                    var contador = 1
+                    println("Ingrese su búsqueda")
+                    val name = readLine()!!
+                    (TableSong).slice(TableSong.songName).select { TableSong.songName.like("%${name}%") }.forEach {
+                        println("$contador ${it[TableSong.songName]}")
+                        contador++
+                        TableSong.update ({TableSong.songName.like("%${name}%")}){
+                            it[favourite] = true
+                        }
+                    }
                 }
-                */
-                (TableSong).slice(TableSong.songName).select { TableSong.songName.like(name) }.forEach {
-                    println("${it[TableSong.songName]}")
+                "2" -> {
+                    var contador = 1
+                    println("Ingrese su búsqueda")
+                    val artistName = readLine()!!
+                    (TableSong).slice(TableSong.artistName).select { TableSong.artistName.like("%${artistName}%") }.forEach {
+                        println("$contador ${it[TableSong.artistName]}")
+                        contador++
+                    }
                 }
             }
         }
