@@ -38,4 +38,8 @@ data class Song(
             return Gson().fromJson(content, Array<Song>::class.java)
         }
     }
+
+    fun getName():String{
+        return this.song
+    }
 }

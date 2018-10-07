@@ -73,8 +73,13 @@ fun main(args: Array<String>) {
             "1" -> {
                 println("Ingrese su búsqueda")
                 val name = readLine()!!
-                for (song in TableSong.select { TableSong.songName.like("%${name}%") }) {
-                    println(song)
+                /*
+                for (songN in TableSong.select { TableSong.songName.like("%${name}%") }) {
+                    println("$it[]")
+                }
+                */
+                (TableSong).slice(TableSong.songName).select { TableSong.songName.like(name) }.forEach {
+                    println("${it[TableSong.songName]}")
                 }
             }
         }
