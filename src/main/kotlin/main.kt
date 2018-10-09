@@ -67,27 +67,68 @@ fun main(args: Array<String>) {
         val ingreso = readLine()!!
         when (ingreso) {
             "1" -> {
-                var contador = 1
                 println("Ingrese su búsqueda")
                 val name = readLine()!!
-                transaction {
-                    (TableSong).slice(TableSong.songName).select { TableSong.songName.like("%${name}%") }.forEach {
-                        println("$contador ${it[TableSong.songName]}")
-                        contador++
-                        TableSong.update ({TableSong.songName.like("%${name}%")}){
-                            it[favourite] = true
 
+                transaction {
+                    (TableSong).slice(TableSong.songName, TableSong.id, TableSong.favourite).select { TableSong.songName.like("%${name}%") }.forEach {
+                        var songId = it[TableSong.id]
+                        println("${it[TableSong.id]}.${it[TableSong.songName]} ${if (it[TableSong.favourite]) {
+                            "Favorita"
+                        } else {
+                            "No es favorita"
+                        }}")
+                        println("Ingrese \"Si\" si desea agregar la canción a sus favoritos o cualquier otro texto si no")
+                        var newFavourite = readLine()!!
+
+                        if (newFavourite == "Si") {
+                            TableSong.update({TableSong.id.eq(songId)}) {
+                                it[TableSong.favourite] = true
+                                println("Canción agragada")
+                            }
+                        }
+                        else{
+                            println("Canción no agregada")
                         }
                     }
                 }
             }
             "2" -> {
-                var contador = 1
+
                 println("Ingrese su búsqueda")
                 val artistName = readLine()!!
-                (TableSong).slice(TableSong.artistName).select { TableSong.artistName.like("%${artistName}%") }.forEach {
-                    println("$contador ${it[TableSong.artistName]}")
-                    contador++
+
+                transaction {
+                    /*TODO
+                    Cambiar Strings para que muestre nombre de canción también
+                     */
+                    (TableSong).slice(TableSong.songName, TableSong.artistName, TableSong.id, TableSong.favourite).select { TableSong.artistName.like("%${artistName}%") }.forEach {
+                        var songId = it[TableSong.id]
+                        println("${it[TableSong.id]}.${it[TableSong.artistName]} ${if (it[TableSong.favourite]) {
+                            "Favorita"
+                        } else {
+                            "No es favorita"
+                        }}")
+                        println("Ingrese \"Si\" si desea agregar la canción a sus favoritos o cualquier otro texto si no")
+                        var newFavourite = readLine()!!
+
+                        if (newFavourite == "Si") {
+                            TableSong.update({TableSong.id.eq(songId)}) {
+                                it[TableSong.favourite] = true
+                                println("Canción agragada")
+                            }
+                        }
+                        else{
+                            println("Canción no agregada")
+                        }
+                    }
+                }
+            }
+            "3" ->{
+                transaction {
+                    (TableSong).slice(TableSong.artistName, TableSong.songName, TableSong.id, TableSong.favourite).select { TableSong.favourite.eq(true) }.forEach {
+                        println("${it[TableSong.id]} . ${it[TableSong.songName]} ${it[TableSong.artistName]}")
+                    }
                 }
             }
         }
