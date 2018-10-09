@@ -1,4 +1,4 @@
-
+//importamos aspectos necesarios
 import com.github.kittinunf.fuel.Fuel
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
@@ -8,19 +8,24 @@ import org.jetbrains.exposed.sql.transactions.transaction
 fun main(args: Array<String>) {
     val list: ArrayList<Song> = ArrayList()
 
+    //Pedimos json a página web
     val url = "https://next.json-generator.com/api/json/get/EkeSgmXycS"
     val (request, response, result) = Fuel.get(url).responseObject(Song.SongArrayDeserializer())
     val (songs, err) = result
 
+    //Conectamos a base de datos
     Database.connect(
             "jdbc:postgresql:test",
             "org.postgresql.Driver",
             "postgres",
             "2x4x6x8x10"
     )
-    transaction {
-        SchemaUtils.create(TableSong)
 
+    //Primera transacción
+    transaction {
+        //Creamos nueva tabla
+        SchemaUtils.create(TableSong)
+        //Si la tala no está vacía, insertamos todos los valroes correspondientes
         if (songs != null) {
             for (song in songs) {
                 TableSong.insert {
@@ -55,8 +60,9 @@ fun main(args: Array<String>) {
             }
         }
     }
-    val wantsToContinue = true
+    var wantsToContinue = true
 
+    //Variable para continuar preguntando
     while (wantsToContinue) {
         println("""
                 1. Buscar canciones por nombre
@@ -70,10 +76,13 @@ fun main(args: Array<String>) {
                 println("Ingrese su búsqueda")
                 val name = readLine()!!
 
+                //Creams una nueva transacción, para encontrar una canción con el nombre que buscamos
                 transaction {
-                    (TableSong).slice(TableSong.songName, TableSong.id, TableSong.favourite).select { TableSong.songName.like("%${name}%") }.forEach {
+                    (TableSong).slice(TableSong.songName, TableSong.artistName, TableSong.id, TableSong.favourite).select { TableSong.songName.like("%${name}%") }.forEach {
                         var songId = it[TableSong.id]
-                        println("${it[TableSong.id]}.${it[TableSong.songName]} ${if (it[TableSong.favourite]) {
+                        //Por cada canción que encontramos, imprimimos la canción con sus datos y preguntamos si desean
+                        //Agregarla a favoritos
+                        println("${it[TableSong.id]}.${it[TableSong.songName]} by ${TableSong.artistName} ${if (it[TableSong.favourite]) {
                             "Favorita"
                         } else {
                             "No es favorita"
@@ -81,6 +90,7 @@ fun main(args: Array<String>) {
                         println("Ingrese \"Si\" si desea agregar la canción a sus favoritos o cualquier otro texto si no")
                         var newFavourite = readLine()!!
 
+                        //En caso positivo,se agrega a favoritos
                         if (newFavourite == "Si") {
                             TableSong.update({TableSong.id.eq(songId)}) {
                                 it[TableSong.favourite] = true
@@ -93,18 +103,15 @@ fun main(args: Array<String>) {
                     }
                 }
             }
-            "2" -> {
 
+            "2" -> {
                 println("Ingrese su búsqueda")
                 val artistName = readLine()!!
-
+                //Lo mismo que en la búsqueda por canción, solo que buscando por artistas
                 transaction {
-                    /*TODO
-                    Cambiar Strings para que muestre nombre de canción también
-                     */
                     (TableSong).slice(TableSong.songName, TableSong.artistName, TableSong.id, TableSong.favourite).select { TableSong.artistName.like("%${artistName}%") }.forEach {
                         var songId = it[TableSong.id]
-                        println("${it[TableSong.id]}.${it[TableSong.artistName]} ${if (it[TableSong.favourite]) {
+                        println("${it[TableSong.id]}.${it[TableSong.songName]} by ${TableSong.artistName} ${if (it[TableSong.favourite]) {
                             "Favorita"
                         } else {
                             "No es favorita"
@@ -124,12 +131,16 @@ fun main(args: Array<String>) {
                     }
                 }
             }
+            //Buscamos todas las canciones favoritas y las imprimimos
             "3" ->{
                 transaction {
                     (TableSong).slice(TableSong.artistName, TableSong.songName, TableSong.id, TableSong.favourite).select { TableSong.favourite.eq(true) }.forEach {
                         println("${it[TableSong.id]} . ${it[TableSong.songName]} ${it[TableSong.artistName]}")
                     }
                 }
+            }
+            "4" ->{
+                wantsToContinue = false
             }
         }
     }
