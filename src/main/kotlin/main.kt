@@ -9,9 +9,6 @@ fun main(args: Array<String>) {
     val list: ArrayList<Song> = ArrayList()
 
     val url = "https://next.json-generator.com/api/json/get/EkeSgmXycS"
-
-    println("lol")
-
     val (request, response, result) = Fuel.get(url).responseObject(Song.SongArrayDeserializer())
     val (songs, err) = result
 
@@ -57,37 +54,40 @@ fun main(args: Array<String>) {
                 }
             }
         }
-        val wantsToContinue = true
+    }
+    val wantsToContinue = true
 
-        while (wantsToContinue){
-            println("""
+    while (wantsToContinue) {
+        println("""
                 1. Buscar canciones por nombre
                 2. Buscar canciones por artista
                 3. Mostrar todas mis canciones favoritas
                 4. Salir
             """.trimIndent())
-            val ingreso = readLine()!!
-            when (ingreso) {
-                "1" -> {
-                    var contador = 1
-                    println("Ingrese su búsqueda")
-                    val name = readLine()!!
+        val ingreso = readLine()!!
+        when (ingreso) {
+            "1" -> {
+                var contador = 1
+                println("Ingrese su búsqueda")
+                val name = readLine()!!
+                transaction {
                     (TableSong).slice(TableSong.songName).select { TableSong.songName.like("%${name}%") }.forEach {
                         println("$contador ${it[TableSong.songName]}")
                         contador++
                         TableSong.update ({TableSong.songName.like("%${name}%")}){
                             it[favourite] = true
+
                         }
                     }
                 }
-                "2" -> {
-                    var contador = 1
-                    println("Ingrese su búsqueda")
-                    val artistName = readLine()!!
-                    (TableSong).slice(TableSong.artistName).select { TableSong.artistName.like("%${artistName}%") }.forEach {
-                        println("$contador ${it[TableSong.artistName]}")
-                        contador++
-                    }
+            }
+            "2" -> {
+                var contador = 1
+                println("Ingrese su búsqueda")
+                val artistName = readLine()!!
+                (TableSong).slice(TableSong.artistName).select { TableSong.artistName.like("%${artistName}%") }.forEach {
+                    println("$contador ${it[TableSong.artistName]}")
+                    contador++
                 }
             }
         }
